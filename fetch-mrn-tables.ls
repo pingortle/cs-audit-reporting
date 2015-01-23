@@ -41,6 +41,8 @@ login = (rq, jar, { organizationId, username, password }, cb) ->
     cb
 
 fetch-mrn-tables = (mrns, credentials, opts, callback) ->
+  (callback = opts) and (opts = null) if not callback?
+
   jar = request.jar!
   rq = request.defaults {
     jar
