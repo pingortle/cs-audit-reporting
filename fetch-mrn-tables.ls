@@ -6,18 +6,10 @@ require! {
   'prelude-ls': { at, filter, first, keys, find, map }
 }
 
-jar = request.jar()
-request = request.defaults {
-  jar
-  #proxy: "http://127.0.0.1:8888"
-  strictSSL: no
-  followAllRedirects: yes
-}
-
-mrnToTable = (mrn, cb) ->
-  (error, response, body) <- request 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
+mrnToTable = (rq, mrn, cb) -->
+  (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
   (errors, window) <- jsdom.env body, ['http://code.jquery.com/jquery.js']
-  (error, response, body) <- request.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
+  (error, response, body) <- rq.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
     form: {
       validForm: \true
       searchType: "Field Search"
@@ -33,9 +25,9 @@ mrnToTable = (mrn, cb) ->
   (jsErrors, window) <- jsdom.env body, ['http://code.jquery.com/jquery.js']
   cb error, window.$('table table table:nth-of-type(3)').wrap('<div />').parent!.html!
 
-login = (organizationId, username, password, cb) ->
-  (error, response, body) <- request 'https://ebc.cybersource.com/ebc/login/Login.do'
-  request.post 'https://ebc.cybersource.com/ebc/login/LoginProcess.do', {
+login = (rq, jar, { organizationId, username, password }, cb) ->
+  (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/login/Login.do'
+  rq.post 'https://ebc.cybersource.com/ebc/login/LoginProcess.do', {
     form: {
       loginToken: jar.getCookies("https://ebc.cybersource.com/ebc/login/LoginProcess.do")
       |> find (.key == "loginToken")
@@ -50,11 +42,19 @@ login = (organizationId, username, password, cb) ->
     cb
 
 fetch-mrn-tables = (mrns, callback) ->
+  jar = request.jar!
+  rq = request.defaults {
+    jar
+    proxy: "http://127.0.0.1:8888"
+    strictSSL: no
+    followAllRedirects: yes
+  }
+
   prompt.start!
 
   (e, r) <- prompt.get [{ name: \organizationId required: yes } { name: \username required: yes } {name: \password hidden: yes }]
-  (e, r) <- login r.organizationId, r.username, r.password
-  (error, results) <- async.map mrns, mrnToTable
+  (e, r) <- login rq, jar, r
+  (error, results) <- async.map mrns, mrnToTable rq
   callback error, results
 
 module.exports = fetch-mrn-tables
