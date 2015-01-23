@@ -1,8 +1,9 @@
 require! {
   \./generate-email
   \./fetch-mrn-tables
-  \Mustache
-  \fs
+  Mustache
+  prompt
+  fs
   'prelude-ls': { map, filter }
   'dank-csv': csv-parse
 }
@@ -17,8 +18,15 @@ email-data = generate-email(
 
 email-template = fs.read-file-sync \./email.mustache .to-string!
 
+prompt.start!
+
+(err, credentials) <- prompt.get [
+  { name: \organizationId required: yes }
+  { name: \username required: yes }
+  {name: \password hidden: yes }
+]
 do
-  (err, tables) <- fetch-mrn-tables (csv |> map (.MerchantReferenceNumber))
+  (err, tables) <- fetch-mrn-tables (csv |> map (.MerchantReferenceNumber)), credentials
   email-data.mrn-tables = tables
   fs.write-file-sync(
     "tmp/email-#{current-date = Date.now!}.html"

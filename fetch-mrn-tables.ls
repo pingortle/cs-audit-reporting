@@ -2,7 +2,6 @@ require! {
   async
   request
   jsdom
-  prompt
   'prelude-ls': { at, filter, first, keys, find, map }
 }
 
@@ -41,7 +40,7 @@ login = (rq, jar, { organizationId, username, password }, cb) ->
     },
     cb
 
-fetch-mrn-tables = (mrns, callback) ->
+fetch-mrn-tables = (mrns, credentials, callback) ->
   jar = request.jar!
   rq = request.defaults {
     jar
@@ -50,10 +49,7 @@ fetch-mrn-tables = (mrns, callback) ->
     followAllRedirects: yes
   }
 
-  prompt.start!
-
-  (e, r) <- prompt.get [{ name: \organizationId required: yes } { name: \username required: yes } {name: \password hidden: yes }]
-  (e, r) <- login rq, jar, r
+  (e, r) <- login rq, jar, credentials
   (error, results) <- async.map mrns, mrnToTable rq
   callback error, results
 
