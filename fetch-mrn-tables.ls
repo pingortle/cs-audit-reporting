@@ -4,14 +4,14 @@ require! {
   request
   jsdom
   prompt
-  'dank-csv': csv-parse
   'prelude-ls': { at, filter, first, keys, find, map }
+  \./utility
 }
 
 jar = request.jar()
 request = request.defaults {
   jar
-  /*proxy: "http://127.0.0.1:8888"*/
+  #proxy: "http://127.0.0.1:8888"
   strictSSL: no
   followAllRedirects: yes
 }
@@ -48,17 +48,19 @@ login = (organizationId, username, password, cb) ->
       password
       alreadyVisited: \true
     }
-  },
-  cb
+    },
+    cb
 
-mrns = fs.read-file-sync process.argv[2] .to-string!
-  |> csv-parse
-  |> filter (.MerchantReferenceNumber)
-  |> map (.MerchantReferenceNumber)
+fetch-mrn-tables = ->
+  mrns = fs.read-file-sync process.argv[2] .to-string!
+    |> utility.audit-report-to-array
+    |> map (.MerchantReferenceNumber)
 
-prompt.start!
+  prompt.start!
 
-(e, r) <- prompt.get [{ name: \organizationId required: yes } { name: \username required: yes } {name: \password hidden: yes }]
-(e, r) <- login r.organizationId, r.username, r.password
-(error, results) <- async.map mrns, mrnToTable
-fs.write-file-sync 'results.html' results
+  (e, r) <- prompt.get [{ name: \organizationId required: yes } { name: \username required: yes } {name: \password hidden: yes }]
+  (e, r) <- login r.organizationId, r.username, r.password
+  (error, results) <- async.map mrns, mrnToTable
+  fs.write-file-sync \tmp/results.html results
+
+module.exports = fetch-mrn-tables

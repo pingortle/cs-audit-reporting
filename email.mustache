@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Cybersource Audit Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+  <dl>
+    <dt>To:</dt><dd>{{#to}}{{.}};{{/to}}</dd>
+    <dt>Cc:</dt><dd>{{#cc}}{{.}};{{/cc}}</dd>
+  </dl>
+
+  <p>{{bodyText}}</p>
+  <ul>
+  {{#locations}}
+    <li>
+      <strong>{{name}}:</strong>
+      <ul>
+    {{#customers}}
+      <li>{{mrn}}</li>
+    {{/customers}}
+      </ul>
+    </li>
+  {{/locations}}
+  </ul>
+
+</body
+</html>
