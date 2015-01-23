@@ -1,13 +1,15 @@
 require! {
   \./generate-email
   \./fetch-mrn-tables
-  \./utility
   \Mustache
   \fs
-  'prelude-ls': { map }
+  'prelude-ls': { map, filter }
+  'dank-csv': csv-parse
 }
 
-csv = fs.read-file-sync process.argv[2] .to-string! |> utility.audit-report-to-array
+csv = fs.read-file-sync process.argv[2] .to-string!
+  |> csv-parse
+  |> filter (.MerchantReferenceNumber)
 
 email-data = generate-email(
   fs.read-file-sync process.argv[3] |> JSON.parse,
