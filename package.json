@@ -14,6 +14,7 @@
     "dank-csv": "0.0.1",
     "jsdom": "^3.0.2",
     "mustache": "^0.8.2",
+    "prefsink": "^0.1.0",
     "prelude-ls": "^1.1.1",
     "prompt": "^0.2.14",
     "request": "^2.51.0"

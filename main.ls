@@ -2,18 +2,28 @@ require! {
   \./generate-email
   \./fetch-mrn-tables
   Mustache
+  prefsink: prefs
   prompt
   fs
   'prelude-ls': { map, filter }
   'dank-csv': csv-parse
 }
 
+prefJar =  prefs.loadSync 'cs-audit-reporting' or prefs.create \cs-audit-reporting {
+  proxy: "http://127.0.0.1:8888"
+  username: ""
+  organization-id: ""
+  email-settings: ""
+}
+
+proxy = prefJar.get \proxy
+
 csv = fs.read-file-sync process.argv[2] .to-string!
   |> csv-parse
   |> filter (.MerchantReferenceNumber)
 
 email-data = generate-email(
-  fs.read-file-sync process.argv[3] |> JSON.parse,
+  prefJar.get \email-settings |> fs.read-file-sync |> JSON.parse,
   csv
 )
 
@@ -21,15 +31,16 @@ email-template = fs.read-file-sync \./email.mustache .to-string!
 
 prompt.start!
 
-(err, credentials) <- prompt.get [
-  { name: \organizationId required: yes }
-  { name: \username required: yes }
-  {name: \password hidden: yes }
-]
+promptOptions =
+  *name: \organizationId default: prefJar.get \organizationId
+  *name: \username default: prefJar.get \username
+  *name: \password required: yes hidden: yes
+
+(err, credentials) <- prompt.get promptOptions
 (err, tables) <- fetch-mrn-tables(
   (csv |> map (.MerchantReferenceNumber)),
   credentials,
-  proxy: "http://127.0.0.1:8888" strictSSL: no
+  { proxy, strictSSL: no }
 )
 fs.write-file-sync(
   "tmp/email-#{current-date = Date.now!}.html"
