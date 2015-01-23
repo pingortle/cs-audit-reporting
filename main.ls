@@ -14,7 +14,8 @@ csv = fs.read-file-sync process.argv[2] .to-string!
 
 email-data = generate-email(
   fs.read-file-sync process.argv[3] |> JSON.parse,
-  csv)
+  csv
+)
 
 email-template = fs.read-file-sync \./email.mustache .to-string!
 
@@ -30,4 +31,5 @@ do
   email-data.mrn-tables = tables
   fs.write-file-sync(
     "tmp/email-#{current-date = Date.now!}.html"
-    Mustache.render(email-template, email-data))
+    Mustache.render(email-template, email-data)
+)
