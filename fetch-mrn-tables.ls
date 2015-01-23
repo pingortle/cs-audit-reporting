@@ -40,14 +40,12 @@ login = (rq, jar, { organizationId, username, password }, cb) ->
     },
     cb
 
-fetch-mrn-tables = (mrns, credentials, callback) ->
+fetch-mrn-tables = (mrns, credentials, opts, callback) ->
   jar = request.jar!
   rq = request.defaults {
     jar
-    proxy: "http://127.0.0.1:8888"
-    strictSSL: no
     followAllRedirects: yes
-  }
+  } <<< (opts or {})
 
   (e, r) <- login rq, jar, credentials
   (error, results) <- async.map mrns, mrnToTable rq
