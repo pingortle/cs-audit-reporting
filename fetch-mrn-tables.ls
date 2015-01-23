@@ -1,11 +1,9 @@
 require! {
-  fs
   async
   request
   jsdom
   prompt
   'prelude-ls': { at, filter, first, keys, find, map }
-  \./utility
 }
 
 jar = request.jar()
@@ -51,16 +49,12 @@ login = (organizationId, username, password, cb) ->
     },
     cb
 
-fetch-mrn-tables = ->
-  mrns = fs.read-file-sync process.argv[2] .to-string!
-    |> utility.audit-report-to-array
-    |> map (.MerchantReferenceNumber)
-
+fetch-mrn-tables = (mrns, callback) ->
   prompt.start!
 
   (e, r) <- prompt.get [{ name: \organizationId required: yes } { name: \username required: yes } {name: \password hidden: yes }]
   (e, r) <- login r.organizationId, r.username, r.password
   (error, results) <- async.map mrns, mrnToTable
-  fs.write-file-sync \tmp/results.html results
+  callback error, results
 
 module.exports = fetch-mrn-tables
