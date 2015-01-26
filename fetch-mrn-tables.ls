@@ -28,16 +28,16 @@ login = (rq, jar, { organizationId, username, password }, cb) ->
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/login/Login.do'
   rq.post 'https://ebc.cybersource.com/ebc/login/LoginProcess.do', {
     form: {
-      loginToken: jar.getCookies("https://ebc.cybersource.com/ebc/login/LoginProcess.do")
-      |> find (.key == "loginToken")
-      |> (.value)
+      loginToken: jar.getCookies "https://ebc.cybersource.com/ebc/login/LoginProcess.do"
+        |> find (.key == "loginToken")
+        |> (.value)
       requestFromPartner: ""
       organizationId
       username
       password
       alreadyVisited: \true
     }
-    },
+  },
     cb
 
 fetch-mrn-tables = (mrns, credentials, opts, callback) ->

@@ -9,7 +9,7 @@ require! {
   'dank-csv': csv-parse
 }
 
-prefJar =  prefs.loadSync 'cs-audit-reporting' or prefs.create \cs-audit-reporting {
+prefJar =  prefs.loadSync \cs-audit-reporting or prefs.create \cs-audit-reporting {
   proxy: "http://127.0.0.1:8888"
   username: ""
   organization-id: ""
@@ -23,7 +23,7 @@ csv = fs.read-file-sync process.argv[2] .to-string!
   |> filter (.MerchantReferenceNumber)
 
 email-data = generate-email(
-  prefJar.get \email-settings |> fs.read-file-sync |> JSON.parse,
+  prefJar.get \email-settings |> fs.read-file-sync |> JSON.parse
   csv
 )
 
@@ -38,11 +38,11 @@ promptOptions =
 
 (err, credentials) <- prompt.get promptOptions
 (err, tables) <- fetch-mrn-tables(
-  (csv |> map (.MerchantReferenceNumber)),
-  credentials,
+  csv |> map (.MerchantReferenceNumber)
+  credentials
   { proxy, strictSSL: no }
 )
 fs.write-file-sync(
   "tmp/email-#{current-date = Date.now!}.html"
-  Mustache.render(email-template, email-data <<< mrn-tables: tables)
+  Mustache.render email-template, email-data <<< mrn-tables: tables
 )
