@@ -1,13 +1,12 @@
 require! {
   async
   request
-  jsdom
+  cheerio: \$
   'prelude-ls': { at, filter, first, keys, find, map }
 }
 
 mrnToTable = (rq, mrn, cb) -->
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
-  (errors, window) <- jsdom.env body, ['http://code.jquery.com/jquery.js']
   (error, response, body) <- rq.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
     form: {
       validForm: \true
@@ -18,11 +17,15 @@ mrnToTable = (rq, mrn, cb) -->
       searchTransactions: \50
       sortOrder: \DESC
       merchantId: \all
-      csrfToken: window.$('input[name="csrfToken"]').val!
+      csrfToken: ($ 'input[name="csrfToken"]' body).val!
     }
   }
-  (jsErrors, window) <- jsdom.env body, ['http://code.jquery.com/jquery.js']
-  cb error, window.$('table table table:nth-of-type(3)').wrap('<div />').parent!.html!
+  cb(
+    error
+    $ '<div />'
+      |> (.append $ 'table table table:nth-of-type(3)' body)
+      |> (.html!)
+  )
 
 login = (rq, jar, { organizationId, username, password }, cb) ->
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/login/Login.do'
