@@ -5,7 +5,7 @@ require! {
   prefsink: prefs
   prompt
   fs
-  'prelude-ls': { map, filter }
+  'prelude-ls': { map, filter, fold }
   'dank-csv': csv-parse
 }
 
@@ -29,12 +29,18 @@ email-data = generate-email(
 
 email-template = fs.read-file-sync \./email.mustache .to-string!
 
-prompt.start!
-
 promptOptions =
+  *name: \proxy default: prefJar.get \proxy
   *name: \organizationId default: prefJar.get \organizationId
   *name: \username default: prefJar.get \username
   *name: \password required: yes hidden: yes
+
+if prefJar.get \autopilot
+  prompt.override = promptOptions
+    |> filter (.default)
+    |> fold ((a, b) -> a <<< "#{b.name}": b.default), {}
+
+prompt.start!
 
 (err, credentials) <- prompt.get promptOptions
 (err, tables) <- fetch-mrn-tables(
