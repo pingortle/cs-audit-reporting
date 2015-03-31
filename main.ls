@@ -46,7 +46,7 @@ prompt.start!
 (err, tables) <- fetch-mrn-tables(
   csv |> map (.MerchantReferenceNumber)
   credentials
-  { proxy, strictSSL: no }
+  { proxy: (proxy or undefined), strictSSL: no }
 )
 fs.write-file-sync(
   "tmp/email-#{current-date = Date.now!}.html"
