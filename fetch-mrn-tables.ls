@@ -5,6 +5,13 @@ require! {
   'prelude-ls': { at, filter, first, keys, find, map }
 }
 
+extractTableData = (body) ->
+  tableMaybe = $ 'table table table:nth-of-type(3)' body
+  if tableMaybe.length
+    tableMaybe
+  else
+    $ '#transactionSearchDetailsMain' body
+
 mrnToTable = (rq, mrn, cb) -->
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
   (error, response, body) <- rq.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
@@ -23,7 +30,7 @@ mrnToTable = (rq, mrn, cb) -->
   cb(
     error
     $ '<div />'
-      |> (.append $ 'table table table:nth-of-type(3)' body)
+      |> (.append extractTableData body)
       |> (.html!)
   )
 
