@@ -34,6 +34,37 @@ mrnToTable = (rq, mrn, cb) -->
       |> (.html!)
   )
 
+pastWeekToTable = (rq, customerId, cb) -->
+  (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
+  (error, response, body) <- rq.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
+    form: {
+      validForm: \true
+      searchType: "Field Search"
+      searchField: \customer_id
+      searchValue: customerId
+      presetDate: \weektodate
+      searchTransactions: \100
+      sortOrder: \DESC
+      merchantId: \all
+      csrfToken: ($ 'input[name="csrfToken"]' body).val!
+    }
+  }
+  cb(
+    error
+    $ '<div />'
+      |> (.append extractTableData body)
+      |> (.html!)
+  )
+
+transactionToTables = (rq, transaction, cb) -->
+  funcs =
+    mrn: (cb) -> mrnToTable rq, transaction.mrn, cb
+    pastWeek: (cb) -> pastWeekToTable rq, transaction.customerId, cb
+
+  async.parallel funcs, cb
+
+
+
 login = (rq, jar, { organizationId, username, password }, cb) ->
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/login/Login.do'
   rq.post(
@@ -55,7 +86,7 @@ login = (rq, jar, { organizationId, username, password }, cb) ->
     cb
   )
 
-fetch-mrn-tables = (mrns, credentials, opts, callback) ->
+fetch-mrn-tables = (transactions, credentials, opts, callback) ->
   (callback = opts) and (opts = null) if not callback?
 
   jar = request.jar!
@@ -65,7 +96,7 @@ fetch-mrn-tables = (mrns, credentials, opts, callback) ->
   } <<< (opts or {})
 
   (e, r) <- login rq, jar, credentials
-  (error, results) <- async.map mrns, mrnToTable rq
+  (error, results) <- async.map transactions, transactionToTables rq
   callback error, results
 
 module.exports = fetch-mrn-tables
