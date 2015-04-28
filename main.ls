@@ -44,7 +44,7 @@ prompt.start!
 
 (err, credentials) <- prompt.get promptOptions
 (err, tables) <- fetch-mrn-tables(
-  csv |> map (x) -> { mrn: x.MerchantReferenceNumber, customerId: x.Account } 
+  csv |> map (x) -> { mrn: x.MerchantReferenceNumber, customerId: x.Account }
   credentials
   { proxy: (proxy or undefined), strictSSL: no }
 )
