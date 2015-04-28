@@ -12,7 +12,8 @@ extractTableData = (body) ->
   else
     $ '#transactionSearchDetailsMain' body
 
-mrnToTable = (rq, mrn, cb) -->
+mrnToTable = (opts, mrn, cb) -->
+  rq = request.defaults opts
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
   (error, response, body) <- rq.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
     form: {
@@ -34,7 +35,8 @@ mrnToTable = (rq, mrn, cb) -->
       |> (.html!)
   )
 
-pastWeekToTable = (rq, customerId, cb) -->
+pastWeekToTable = (opts, customerId, cb) -->
+  rq = request.defaults opts
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchLoad.do?regular=true'
   (error, response, body) <- rq.post 'https://ebc.cybersource.com/ebc/transactionsearch/TransactionSearchExecute.do', {
     form: {
@@ -42,7 +44,7 @@ pastWeekToTable = (rq, customerId, cb) -->
       searchType: "Field Search"
       searchField: \customer_id
       searchValue: customerId
-      presetDate: \weektodate
+      presetDate: \lastsixmonths
       searchTransactions: \100
       sortOrder: \DESC
       merchantId: \all
@@ -56,16 +58,15 @@ pastWeekToTable = (rq, customerId, cb) -->
       |> (.html!)
   )
 
-transactionToTables = (rq, transaction, cb) -->
+transactionToTables = (opts, transaction, cb) -->
   funcs =
-    mrn: (cb) -> mrnToTable rq, transaction.mrn, cb
-    pastWeek: (cb) -> pastWeekToTable rq, transaction.customerId, cb
+    mrn: mrnToTable opts, transaction.mrn
+    pastWeek: pastWeekToTable opts, transaction.customerId
 
-  async.parallel funcs, cb
+  async.series funcs, cb
 
-
-
-login = (rq, jar, { organizationId, username, password }, cb) ->
+login = (opts, jar, { organizationId, username, password }, cb) ->
+  rq = request.defaults opts
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/login/Login.do'
   rq.post(
     'https://ebc.cybersource.com/ebc/login/LoginProcess.do'
@@ -90,13 +91,12 @@ fetch-mrn-tables = (transactions, credentials, opts, callback) ->
   (callback = opts) and (opts = null) if not callback?
 
   jar = request.jar!
-  rq = request.defaults {
+  opts = {
     jar
     followAllRedirects: yes
   } <<< (opts or {})
 
-  (e, r) <- login rq, jar, credentials
-  (error, results) <- async.map transactions, transactionToTables rq
-  callback error, results
+  (e, r) <- login opts, jar, credentials
+  async.mapSeries transactions, (transactionToTables opts), callback
 
 module.exports = fetch-mrn-tables
