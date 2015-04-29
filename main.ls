@@ -1,6 +1,7 @@
 require! {
   \./generate-email
   \./fetch-mrn-tables
+  \./sql-add-to-EBPP
   Mustache
   prefsink: prefs
   prompt
@@ -14,6 +15,7 @@ prefJar =  prefs.loadSync \cs-audit-reporting or prefs.create \cs-audit-reportin
   username: ""
   organization-id: ""
   email-settings: ""
+  generate-sql: ""
 }
 
 proxy = prefJar.get \proxy
@@ -34,6 +36,7 @@ promptOptions =
   *name: \organizationId default: prefJar.get \organizationId
   *name: \username default: prefJar.get \username
   *name: \password required: yes hidden: yes
+  *name: \generate-sql default: prefJar.get \generate-sql
 
 if prefJar.get \autopilot
   prompt.override = promptOptions
@@ -52,3 +55,6 @@ fs.write-file-sync(
   "tmp/email-#{current-date = Date.now!}.html"
   Mustache.render email-template, email-data <<< mrn-tables: tables
 )
+
+if credentials.\generate-sql && credentials."generate-sql"[0].toLowerCase! is "y"
+  fs.write-file-sync "tmp/proc-#{current-date}.sql", (sql-add-to-EBPP csv).join ""
