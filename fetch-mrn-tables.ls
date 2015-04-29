@@ -2,7 +2,7 @@ require! {
   async
   request
   cheerio: \$
-  'prelude-ls': { at, filter, first, keys, find, map }
+  'prelude-ls': { at, each, filter, first, keys, find, map, Obj }
 }
 
 extractTableData = (body) ->
@@ -68,6 +68,10 @@ transactionToTables = (opts, transaction, cb) -->
 login = (opts, jar, { organizationId, username, password }, cb) ->
   rq = request.defaults opts
   (error, response, body) <- rq 'https://ebc.cybersource.com/ebc/login/Login.do'
+
+  if error
+    return cb error, response
+
   rq.post(
     'https://ebc.cybersource.com/ebc/login/LoginProcess.do'
 
@@ -87,6 +91,10 @@ login = (opts, jar, { organizationId, username, password }, cb) ->
     cb
   )
 
+Obj.without = (keys, obj) -->
+  obj with obj
+    each ((k) -> delete ..[k]), keys
+
 fetch-mrn-tables = (transactions, credentials, opts, callback) ->
   (callback = opts) and (opts = null) if not callback?
 
@@ -97,6 +105,10 @@ fetch-mrn-tables = (transactions, credentials, opts, callback) ->
   } <<< (opts or {})
 
   (e, r) <- login opts, jar, credentials
+
+  if e? and opts.proxy
+    return fetch-mrn-tables transactions, credentials, Obj.without <[proxy]> opts, callback
+
   async.mapSeries transactions, (transactionToTables opts), callback
 
 module.exports = fetch-mrn-tables
