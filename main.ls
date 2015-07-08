@@ -8,6 +8,7 @@ require! {
   fs
   'prelude-ls': { map, filter, fold }
   'dank-csv': csv-parse
+  'child_process': { exec }
 }
 
 prefJar =  prefs.loadSync \cs-audit-reporting or prefs.create \cs-audit-reporting {
@@ -58,3 +59,6 @@ fs.write-file-sync(
 
 if credentials.\generate-sql && credentials."generate-sql"[0].toLowerCase! is "y"
   fs.write-file-sync "tmp/proc-#{current-date}.sql", (sql-add-to-EBPP csv).join ""
+
+exec "start email-#{current-date}.html" { cwd: \tmp env: process.env }
+exec "explorer tmp"
