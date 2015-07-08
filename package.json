@@ -13,6 +13,7 @@
     "async": "^0.9.0",
     "cheerio": "^0.18.0",
     "dank-csv": "0.0.1",
+    "mkdirp": "^0.5.1",
     "mustache": "^0.8.2",
     "prefsink": "^0.1.0",
     "prelude-ls": "^1.1.1",

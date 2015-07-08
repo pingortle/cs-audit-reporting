@@ -6,6 +6,7 @@ require! {
   prefsink: prefs
   prompt
   fs
+  mkdirp
   'prelude-ls': { map, filter, fold }
   'dank-csv': csv-parse
   'child_process': { exec }
@@ -43,6 +44,10 @@ if prefJar.get \autopilot
   prompt.override = promptOptions
     |> filter (.default)
     |> fold ((a, b) -> a <<< "#{b.name}": b.default), {}
+
+(tmpDirError) <- mkdirp \tmp
+
+throw new Error "Could not create 'tmp' directory." if tmpDirError
 
 prompt.start!
 
