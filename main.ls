@@ -60,5 +60,11 @@ fs.write-file-sync(
 if credentials.\generate-sql && credentials."generate-sql"[0].toLowerCase! is "y"
   fs.write-file-sync "tmp/proc-#{current-date}.sql", (sql-add-to-EBPP csv).join ""
 
-exec "start email-#{current-date}.html" { cwd: \tmp env: process.env }
-exec "explorer tmp"
+if process.platform is \win32
+  exec "start email-#{current-date}.html" { cwd: \tmp env: process.env }
+else if process.platform is \darwin
+  exec "open email-#{current-date}.html" { cwd: \tmp env: process.env }
+else if process.platform is \linux
+  exec "which xdg-open" (error, stdout, stderr) ->
+    if stdout.length > 0
+      exec "xdg-open email-#{current-date}.html" { cwd: \tmp env: process.env }
