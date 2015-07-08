@@ -1,5 +1,5 @@
 require! {
-  Mustache
+  mustache
   'prelude-ls': { map }
 }
 
@@ -16,9 +16,9 @@ GO
 
 '''
 
-Mustache.render
+mustache.render
 
 create-sqlprocs = (customers) ->
-  map ((c) -> Mustache.render proc-template, c), customers
+  map ((c) -> mustache.render proc-template, c), customers
 
 module.exports = create-sqlprocs

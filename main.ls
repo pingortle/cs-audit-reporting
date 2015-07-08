@@ -2,7 +2,7 @@ require! {
   \./generate-email
   \./fetch-mrn-tables
   \./sql-add-to-EBPP
-  Mustache
+  mustache
   prefsink: prefs
   prompt
   fs
@@ -54,8 +54,9 @@ prompt.start!
 )
 fs.write-file-sync(
   "tmp/email-#{current-date = Date.now!}.html"
-  Mustache.render email-template, email-data <<< mrn-tables: tables
+  mustache.render email-template, email-data <<< mrn-tables: tables
 )
+
 
 if credentials.\generate-sql && credentials."generate-sql"[0].toLowerCase! is "y"
   fs.write-file-sync "tmp/proc-#{current-date}.sql", (sql-add-to-EBPP csv).join ""
