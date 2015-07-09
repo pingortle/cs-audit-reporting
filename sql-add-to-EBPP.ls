@@ -14,20 +14,25 @@ EXEC	@return_value = [dbo].[proc_CyberPaymentsUpdate]
 SELECT	'Return Value' = @return_value
 GO
 
+
 '''
 
 mustache.render
 
 create-sqlprocs = (customers) ->
   concat [
+    '''
+    USE CDR
+
+
+    ''',
     (map ((c) -> mustache.render proc-template, c), customers), [
       '''
-
       DECLARE	@return_value int
       EXEC @return_value = [dbo].[proc_CyberPaymentsSendToEBPP]
       SELECT	'Return Value' = @return_value
       GO
-      
+
       '''
     ]
   ]
